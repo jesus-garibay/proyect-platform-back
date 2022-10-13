@@ -1,0 +1,50 @@
+{
+  "Type": "AWS::Lambda::Function",
+  "Properties": {
+    "Code": "../{{code}}",
+    "Handler": "{{handler}}",
+    "Role": {
+      "Fn::GetAtt": [
+        "ROLlendingplatformbackLambda",
+        "Arn"
+      ]
+    },
+    "Runtime": "python3.9",
+    "FunctionName": {
+      "Fn::Sub": "${Environment}-${AppName}-{{name}}"
+    },
+    "MemorySize": 3072,
+    "Timeout": 300,
+    "Environment": {
+      "Variables": {
+        "ENVIRONMENT": {
+          "Ref": "Environment"
+        }
+      }
+    },
+    "VpcConfig": {
+      "SecurityGroupIds": [
+        {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${NetworkStackName}-SG"
+          }
+        }
+      ],
+      "SubnetIds": {
+        "Fn::Split": [
+          ",",
+          {
+            "Fn::ImportValue": {
+              "Fn::Sub": "${NetworkStackName}-PrivateSubnets"
+            }
+          }
+        ]
+      }
+    },
+    "Layers": [
+      {
+        "Ref": "LYSlendingplatformbackCore"
+      }
+    ]
+  }
+}
