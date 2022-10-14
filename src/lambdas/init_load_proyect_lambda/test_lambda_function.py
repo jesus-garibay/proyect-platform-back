@@ -4,10 +4,9 @@ from .lambda_function import lambda_handler
 from core_utils.decorators import ignore_warnings
 
 
-class TestProyectLambda(TestCase):
+class TestLambda(TestCase):
     def setUp(self) -> None:
-        self.event = {
-        }
+        self.event = {"Hello"}
 
     @ignore_warnings
     def test_lambda_handler(self):
