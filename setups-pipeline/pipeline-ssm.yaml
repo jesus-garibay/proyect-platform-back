@@ -1,0 +1,695 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Build a basic pipeline
+Parameters:
+  Environment:
+    Type: String
+    AllowedValues:
+      - dev
+      - qa
+      - staging
+      - prod
+    Description: Environment name.
+    Default: dev
+  AppName:
+    Type: String
+    ConstraintDescription: '[a-z]+'
+    Description: The project name.
+    Default: lendingplatformback
+  PrincipalTemplate:
+    Type: String
+    Description: Name of the main template in the project.
+    Default: projectTemplate.json
+  NetworkStackParameter:
+    Type: String
+    Description: The stack name for get all network configuration.
+    Default: ''
+  cognitoStackParameter:
+    Type: String
+    Description: The stack name for get cognito configuration.
+    Default: ''
+  ArtifactName:
+    Type: String
+    Default: projectTemplate.zip
+  InswitchCredentials:
+    Type: String
+    NoEcho: true
+  BrazeCredentials:
+    Type: String
+    Default: ...
+  InswitchHost:
+    Type: String
+  BrazeHost:
+    Type: String
+    Default: ...
+  MambuSettings:
+    Type: String
+  MFSLending:
+    Type: String
+  MFSLendingCredentials:
+    Type: String
+    NoEcho: true
+  MambuCredentials:
+    Type: String
+    NoEcho: true
+  DebitSettings:
+    Type: String
+    Default: ...
+  EmitterApp:
+    Type: String
+    AllowedValues:
+      - '{"value": "SMSC"}'
+      - '{"value": "BRAZE"}'
+    Description: Notifications app provider.
+    Default: '{"value": "BRAZE"}'
+  SegmentCredentials:
+    Type: String
+    NoEcho: true
+Resources:
+  AmazonCloudWatchEventRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - events.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName:
+            Fn::Join:
+              - '-'
+              - - Ref: Environment
+                - Ref: AppName
+                - cwe-pipeline-execution
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - codepipeline:StartPipelineExecution
+                Resource:
+                  - Fn::Join:
+                      - ''
+                      - - 'arn:aws:codepipeline:'
+                        - Ref: AWS::Region
+                        - ':'
+                        - Ref: AWS::AccountId
+                        - ':'
+                        - Ref: PLPipeline
+  RULECloudWatchEvent:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source:
+          - aws.s3
+        detail-type:
+          - AWS API Call via CloudTrail
+        detail:
+          eventSource:
+            - s3.amazonaws.com
+          eventName:
+            - PutObject
+            - CompleteMultipartUpload
+          resources:
+            ARN:
+              - Fn::Join:
+                  - ','
+                  - - Fn::GetAtt:
+                        - S3CodePipelineArtifactStore
+                        - Arn
+                    - /
+                    - Ref: ArtifactName
+      Targets:
+        - Arn:
+            Fn::Join:
+              - ''
+              - - 'arn:aws:codepipeline:'
+                - Ref: AWS::Region
+                - ':'
+                - Ref: AWS::AccountId
+                - ':'
+                - Ref: PLPipeline
+          RoleArn:
+            Fn::GetAtt:
+              - AmazonCloudWatchEventRole
+              - Arn
+          Id: codepipeline-AppPipeline
+  PLPipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name:
+        Fn::Join:
+          - '-'
+          - - Ref: Environment
+            - Ref: AppName
+            - pipeline
+      RoleArn:
+        Fn::GetAtt:
+          - ROLCodePipeline
+          - Arn
+      Stages:
+        - Name: Source
+          Actions:
+            - Name:
+                Fn::Sub: Source${AppName}
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Version: 1
+                Provider: S3
+              OutputArtifacts:
+                - Name: SourceOutput
+              Configuration:
+                S3Bucket:
+                  Ref: S3CodePipelineArtifactStore
+                S3ObjectKey:
+                  Ref: ArtifactName
+                PollForSourceChanges: true
+              RunOrder: 1
+        - Name: Deploy
+          Actions:
+            - Name: CreateChangeSet
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: 1
+                Provider: CloudFormation
+              Configuration:
+                ActionMode: CHANGE_SET_REPLACE
+                ChangeSetName:
+                  Fn::Join:
+                    - '-'
+                    - - Ref: Environment
+                      - Ref: AppName
+                      - changeSet
+                StackName:
+                  Fn::Join:
+                    - '-'
+                    - - Ref: Environment
+                      - Ref: AppName
+                      - stack
+                Capabilities: CAPABILITY_IAM,CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND
+                TemplatePath:
+                  Fn::Join:
+                    - '::'
+                    - - SourceOutput
+                      - Ref: PrincipalTemplate
+                RoleArn:
+                  Fn::GetAtt:
+                    - ROLCloudFormation
+                    - Arn
+                ParameterOverrides:
+                  Fn::Sub:
+                    - |-
+                      {
+                        "Environment": "${Environment}",
+                        "NetworkStackParameter": "${NetworkStackParameter}",
+                        "cognitoStackParameter": "${cognitoStackParameter}",
+                        "ArtifactsBucket": "${ArtifactsBucket}",
+                        "AppName": "${projectName}"
+                      }
+                    - Environment:
+                        Ref: Environment
+                      NetworkStackParameter:
+                        Ref: NetworkStackParameter
+                      cognitoStackParameter:
+                        Ref: cognitoStackParameter
+                      ArtifactsBucket:
+                        Ref: S3CodePipelineArtifactStore
+                      projectName:
+                        Ref: AppName
+              RunOrder: 1
+              InputArtifacts:
+                - Name: SourceOutput
+            - Name: ChangesetExcecute
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: 1
+                Provider: CloudFormation
+              Configuration:
+                ActionMode: CHANGE_SET_EXECUTE
+                ChangeSetName:
+                  Fn::Join:
+                    - '-'
+                    - - Ref: Environment
+                      - Ref: AppName
+                      - changeSet
+                StackName:
+                  Fn::Join:
+                    - '-'
+                    - - Ref: Environment
+                      - Ref: AppName
+                      - stack
+              RunOrder: 2
+              InputArtifacts:
+                - Name: SourceOutput
+      ArtifactStore:
+        Type: S3
+        Location:
+          Ref: S3CodePipelineArtifactStore
+  ROLCodePipeline:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codepipeline.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName:
+            Fn::Join:
+              - '-'
+              - - Ref: Environment
+                - Ref: AppName
+                - CodePipeline-Service-Role
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - iam:PassRole
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - ec2:*
+                  - cloudwatch:*
+                  - cloudformation:*
+                  - rds:*
+                Resource: '*'
+              - Effect: Allow
+                Action: s3:*
+                Resource:
+                  Fn::GetAtt:
+                    - S3CodePipelineArtifactStore
+                    - Arn
+        - PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: ssm:*
+                Resource: '*'
+          PolicyName:
+            Fn::Join:
+              - '-'
+              - - Ref: Environment
+                - Ref: AppName
+                - CodePipeline-Parameters-Service-Role
+  S3CodePipelineArtifactStore:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        Fn::Join:
+          - '-'
+          - - Ref: Environment
+            - Ref: AppName
+            - artifacts
+            - Ref: AWS::AccountId
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+  S3PCodePipelineArtifactStore:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Ref: S3CodePipelineArtifactStore
+      PolicyDocument:
+        Version: '2012-10-17'
+        Id: S3PCodePipelineArtifactStorePolicy
+        Statement:
+          - Sid: AllowAccess
+            Effect: Allow
+            Principal:
+              AWS:
+                - Fn::GetAtt:
+                    - ROLCodePipeline
+                    - Arn
+                - Fn::GetAtt:
+                    - ROLProject
+                    - Arn
+            Action: s3:*
+            Resource:
+              Fn::Sub: arn:aws:s3:::${S3CodePipelineArtifactStore}/*
+  ROLProject:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName:
+        Fn::Sub: ${Environment}-${AppName}-CodeBuild-Role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /service-role/
+      Policies:
+        - PolicyName:
+            Fn::Sub: ${Environment}-${AppName}-CodeBuild-Policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Resource: arn:aws:logs:us-east-1:*:log-group:/aws/codebuild/*:*
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+              - Effect: Allow
+                Resource:
+                  - arn:aws:s3:::codepipeline-us-east-1-*
+                  - Fn::GetAtt:
+                      - S3CodePipelineArtifactStore
+                      - Arn
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:ListBucket
+                  - s3:GetBucketAcl
+                  - s3:PutObjectAcl
+                  - s3:GetBucketLocation
+              - Effect: Allow
+                Action:
+                  - codebuild:CreateReportGroup
+                  - codebuild:CreateReport
+                  - codebuild:UpdateReport
+                  - codebuild:BatchPutTestCases
+                Resource: arn:aws:codebuild:us-east-1:*:report-group/*-*
+              - Effect: Allow
+                Action: s3:*
+                Resource:
+                  Fn::GetAtt:
+                    - S3CodePipelineArtifactStore
+                    - Arn
+  ROLCloudFormation:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName:
+        Fn::Join:
+          - '-'
+          - - Ref: Environment
+            - Ref: AppName
+            - CloudFormation-Role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - cloudformation.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName:
+            Fn::Join:
+              - '-'
+              - - Ref: Environment
+                - Ref: AppName
+                - CloudFormation-Policy
+          PolicyDocument:
+            Statement:
+              - Sid: VisualEditor0
+                Effect: Allow
+                Action:
+                  - organizations:ListPoliciesForTarget
+                  - organizations:ListRoots
+                  - organizations:ListTargetsForPolicy
+                  - apigateway:*
+                  - organizations:DescribeAccount
+                  - cloudformation:CreateChangeSet
+                  - s3:GetBucketVersioning
+                  - organizations:DescribePolicy
+                  - organizations:ListChildren
+                  - organizations:ListPolicies
+                  - iam:*
+                  - s3:GetObject
+                  - organizations:DescribeOrganization
+                  - codedeploy:*
+                  - lambda:*
+                  - organizations:DescribeOrganizationalUnit
+                  - organizations:ListParents
+                  - s3:GetObjectVersion
+                  - logs:*
+                  - ec2:AcceptVpcPeeringConnection
+                  - ec2:AcceptVpcEndpointConnections
+                  - ec2:AllocateAddress
+                  - ec2:AssignIpv6Addresses
+                  - ec2:AssignPrivateIpAddresses
+                  - ec2:AssociateAddress
+                  - ec2:AssociateDhcpOptions
+                  - ec2:AssociateRouteTable
+                  - ec2:AssociateSubnetCidrBlock
+                  - ec2:AssociateVpcCidrBlock
+                  - ec2:AttachClassicLinkVpc
+                  - ec2:AttachInternetGateway
+                  - ec2:AttachNetworkInterface
+                  - ec2:AttachVpnGateway
+                  - ec2:AuthorizeSecurityGroupEgress
+                  - ec2:AuthorizeSecurityGroupIngress
+                  - ec2:CreateCustomerGateway
+                  - ec2:CreateDefaultSubnet
+                  - ec2:CreateDefaultVpc
+                  - ec2:CreateDhcpOptions
+                  - ec2:CreateEgressOnlyInternetGateway
+                  - ec2:CreateFlowLogs
+                  - ec2:CreateInternetGateway
+                  - ec2:CreateNatGateway
+                  - ec2:CreateNetworkAcl
+                  - ec2:CreateNetworkAcl
+                  - ec2:CreateNetworkAclEntry
+                  - ec2:CreateNetworkInterface
+                  - ec2:CreateNetworkInterfacePermission
+                  - ec2:CreateRoute
+                  - ec2:CreateRouteTable
+                  - ec2:CreateSecurityGroup
+                  - ec2:CreateSubnet
+                  - ec2:CreateTags
+                  - ec2:CreateVpc
+                  - ec2:CreateVpcEndpoint
+                  - ec2:CreateVpcEndpointConnectionNotification
+                  - ec2:CreateVpcEndpointServiceConfiguration
+                  - ec2:CreateVpcPeeringConnection
+                  - ec2:CreateVpnConnection
+                  - ec2:CreateVpnConnectionRoute
+                  - ec2:CreateVpnGateway
+                  - ec2:DeleteCustomerGateway
+                  - ec2:DeleteDhcpOptions
+                  - ec2:DeleteEgressOnlyInternetGateway
+                  - ec2:DeleteFlowLogs
+                  - ec2:DeleteInternetGateway
+                  - ec2:DeleteNatGateway
+                  - ec2:DeleteNetworkAcl
+                  - ec2:DeleteNetworkAclEntry
+                  - ec2:DeleteNetworkInterface
+                  - ec2:DeleteNetworkInterfacePermission
+                  - ec2:DeleteRoute
+                  - ec2:DeleteRouteTable
+                  - ec2:DeleteSecurityGroup
+                  - ec2:DeleteSubnet
+                  - ec2:DeleteTags
+                  - ec2:DeleteVpc
+                  - ec2:DeleteVpcEndpoints
+                  - ec2:DeleteVpcEndpointConnectionNotifications
+                  - ec2:DeleteVpcEndpointServiceConfigurations
+                  - ec2:DeleteVpcPeeringConnection
+                  - ec2:DeleteVpnConnection
+                  - ec2:DeleteVpnConnectionRoute
+                  - ec2:DeleteVpnGateway
+                  - ec2:DescribeAccountAttributes
+                  - ec2:DescribeAddresses
+                  - ec2:DescribeAvailabilityZones
+                  - ec2:DescribeClassicLinkInstances
+                  - ec2:DescribeCustomerGateways
+                  - ec2:DescribeDhcpOptions
+                  - ec2:DescribeEgressOnlyInternetGateways
+                  - ec2:DescribeFlowLogs
+                  - ec2:DescribeInstances
+                  - ec2:DescribeInternetGateways
+                  - ec2:DescribeKeyPairs
+                  - ec2:DescribeMovingAddresses
+                  - ec2:DescribeNatGateways
+                  - ec2:DescribeNetworkAcls
+                  - ec2:DescribeNetworkInterfaceAttribute
+                  - ec2:DescribeNetworkInterfacePermissions
+                  - ec2:DescribeNetworkInterfaces
+                  - ec2:DescribePrefixLists
+                  - ec2:DescribeRouteTables
+                  - ec2:DescribeSecurityGroupReferences
+                  - ec2:DescribeSecurityGroups
+                  - ec2:DescribeStaleSecurityGroups
+                  - ec2:DescribeSubnets
+                  - ec2:DescribeTags
+                  - ec2:DescribeVpcAttribute
+                  - ec2:DescribeVpcClassicLink
+                  - ec2:DescribeVpcClassicLinkDnsSupport
+                  - ec2:DescribeVpcEndpointConnectionNotifications
+                  - ec2:DescribeVpcEndpointConnections
+                  - ec2:DescribeVpcEndpoints
+                  - ec2:DescribeVpcEndpointServiceConfigurations
+                  - ec2:DescribeVpcEndpointServicePermissions
+                  - ec2:DescribeVpcEndpointServices
+                  - ec2:DescribeVpcPeeringConnections
+                  - ec2:DescribeVpcs
+                  - ec2:DescribeVpnConnections
+                  - ec2:DescribeVpnGateways
+                  - ec2:DetachClassicLinkVpc
+                  - ec2:DetachInternetGateway
+                  - ec2:DetachNetworkInterface
+                  - ec2:DetachVpnGateway
+                  - ec2:DisableVgwRoutePropagation
+                  - ec2:DisableVpcClassicLink
+                  - ec2:DisableVpcClassicLinkDnsSupport
+                  - ec2:DisassociateAddress
+                  - ec2:DisassociateRouteTable
+                  - ec2:DisassociateSubnetCidrBlock
+                  - ec2:DisassociateVpcCidrBlock
+                  - ec2:EnableVgwRoutePropagation
+                  - ec2:EnableVpcClassicLink
+                  - ec2:EnableVpcClassicLinkDnsSupport
+                  - ec2:ModifyNetworkInterfaceAttribute
+                  - ec2:ModifySubnetAttribute
+                  - ec2:ModifyVpcAttribute
+                  - ec2:ModifyVpcEndpoint
+                  - ec2:ModifyVpcEndpointConnectionNotification
+                  - ec2:ModifyVpcEndpointServiceConfiguration
+                  - ec2:ModifyVpcEndpointServicePermissions
+                  - ec2:ModifyVpcPeeringConnectionOptions
+                  - ec2:ModifyVpcTenancy
+                  - ec2:MoveAddressToVpc
+                  - ec2:RejectVpcEndpointConnections
+                  - ec2:RejectVpcPeeringConnection
+                  - ec2:ReleaseAddress
+                  - ec2:ReplaceNetworkAclAssociation
+                  - ec2:ReplaceNetworkAclEntry
+                  - ec2:ReplaceRoute
+                  - ec2:ReplaceRouteTableAssociation
+                  - ec2:ResetNetworkInterfaceAttribute
+                  - ec2:RestoreAddressToClassic
+                  - ec2:RevokeSecurityGroupEgress
+                  - ec2:RevokeSecurityGroupIngress
+                  - ec2:UnassignIpv6Addresses
+                  - ec2:UnassignPrivateIpAddresses
+                  - ec2:UpdateSecurityGroupRuleDescriptionsEgress
+                  - ec2:UpdateSecurityGroupRuleDescriptionsIngress
+                  - ssm:*
+                Resource: '*'
+            Version: '2012-10-17'
+  SecretInswitch:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name:
+        Fn::Sub: INSWITCH_CREDENTIALS_${Environment}
+      Description: This secret has a dynamically generated secret password.
+      SecretString:
+        Ref: InswitchCredentials
+  SSMInswitchHost:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name:
+        Fn::Sub: INSWITCH_HOST_${Environment}
+      Tier: Standard
+      Type: String
+      Value:
+        Ref: InswitchHost
+  SSMBrazeHost:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name:
+        Fn::Sub: BRAZE_HOST_${Environment}
+      Tier: Standard
+      Type: String
+      Value:
+        Ref: BrazeHost
+  SecretBraze:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name:
+        Fn::Sub: BRAZE_CREDENTIALS_${Environment}
+      Description: This secret has a dynamically generated secret password.
+      SecretString:
+        Ref: BrazeCredentials
+  SSMMambuSettings:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name:
+        Fn::Sub: MAMBU_SETTINGS_${Environment}
+      Tier: Standard
+      Type: String
+      Value:
+        Ref: MambuSettings
+  SSMMFSLending:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name:
+        Fn::Sub: MFS_LENDING_${Environment}
+      Tier: Standard
+      Type: String
+      Value:
+        Ref: MFSLending
+  SecretMFSLending:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name:
+        Fn::Sub: MFS_LENDING_CREDENTIALS_${Environment}
+      Description: This secret has a dynamically generated secret password.
+      SecretString:
+        Ref: MFSLendingCredentials
+  SecretMambuCredentials:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name:
+        Fn::Sub: MAMBU_CREDENTIALS_${Environment}
+      Description: This secret has a dynamically generated secret password.
+      SecretString:
+        Ref: MambuCredentials
+  SSMDebitSettings:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name:
+        Fn::Sub: DEBIT_SETTINGS_${Environment}
+      Tier: Standard
+      Type: String
+      Value:
+        Ref: DebitSettings
+  SSMEmitterAppNotifications:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name:
+        Fn::Sub: EMITTER_APP_NOTIFICATIONS_${Environment}
+      Tier: Standard
+      Type: String
+      Value:
+        Ref: EmitterApp
+  SecretSegmentCredentials:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name:
+        Fn::Sub: SEGMENT_CREDENTIALS_${Environment}
+      Description: This secret has a dynamically generated secret password.
+      SecretString:
+        Ref: SegmentCredentials
+Outputs:
+  S3Artifacts:
+    Description: A reference to the created S3 for artifacts.
+    Value:
+      Ref: S3CodePipelineArtifactStore
+    Export:
+      Name:
+        Fn::Sub: ${Environment}-${AWS::StackName}-bucket-artifacts

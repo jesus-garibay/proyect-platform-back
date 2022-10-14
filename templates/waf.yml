@@ -1,0 +1,109 @@
+Description: WebACL for Lending API Gateway and rules definition
+Parameters:
+  WAFName:
+    Description: Name of WAF
+    Type: String
+  Environment: 
+    Description: Environment Name
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - qa
+      - prod
+Resources:
+  WebACL:
+    Type: AWS::WAFv2::WebACL
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      Name: !Ref WAFName
+      Scope: REGIONAL
+      Description: This ia the Lending API Gateway WebACL
+      DefaultAction:
+        Allow: {}
+      VisibilityConfig:
+        SampledRequestsEnabled: true
+        CloudWatchMetricsEnabled: true
+        MetricName: WebACLMetric
+      Rules:
+        - Name: RuleWithAWSManagedRule
+          Priority: 3
+          OverrideAction:
+            Count: {}
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: RuleWithAWSManagedRulesMetric
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesCommonRuleSet
+              ExcludedRules: []
+        - Name: BlockXssAttackRule
+          Priority: 1
+          Action:
+            Block: {}
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: BlockXssAttackMetric
+          Statement:
+            XssMatchStatement:
+              FieldToMatch:
+                AllQueryArguments: {}
+              TextTransformations:
+                - Priority: 0
+                  Type: HTML_ENTITY_DECODE
+                - Priority: 1
+                  Type: URL_DECODE
+        - Name: SqlInjectionMatchRule
+          Priority: 2
+          Action:
+            Block: {}
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: SqliMatchStatementMetric
+          Statement:
+            SqliMatchStatement:
+              FieldToMatch:
+                AllQueryArguments: {}
+              TextTransformations:
+                  - Priority: 0
+                    Type: HTML_ENTITY_DECODE
+                  - Priority: 1
+                    Type: URL_DECODE
+        - Name: SizeConstraintMatchRule
+          Priority: 0
+          Action:
+            Block: {}
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: SizeConstraintStatementMetric
+          Statement:
+            SizeConstraintStatement:
+              ComparisonOperator: GT
+              Size: 8000
+              FieldToMatch:
+                  AllQueryArguments: {}
+              TextTransformations:
+                  - Priority: 0
+                    Type: HTML_ENTITY_DECODE
+                  - Priority: 1
+                    Type: URL_DECODE
+
+  WebACLAssociationApigee:
+     Type: 'AWS::WAFv2::WebACLAssociation'
+     UpdateReplacePolicy: Retain
+     DeletionPolicy: Retain
+     Properties:
+         WebACLArn: !GetAtt WebACL.Arn
+         ResourceArn:
+             !Join ['', [Fn::Sub: 'arn:aws:apigateway:${AWS::Region}::/restapis/',Fn::ImportValue: !Sub 'ApiGWID-lendingplatformback-${Environment}',/stages/,Ref: Environment]]
+
+Outputs:
+  WebACLArn:
+    Description: Arn of WAF ACL for Lending API Gateway
+    Value: !GetAtt WebACL.Arn
