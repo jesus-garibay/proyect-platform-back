@@ -50,7 +50,8 @@ __all__ = [
     "find_status_by_id",
     "find_offer_by_client",
     "get_movements_from_loan_offers_movements_by_client",
-    "get_last_loan"
+    "get_last_loan",
+    "recursive_query"
 ]
 
 LAYER_NAME = 'layer-lending'
@@ -829,13 +830,6 @@ def validate_access(client_id, customer_id):
         "IN_PROCESS": True,
         "REJECTED": True
     }
-    status_primary = {
-        "IN_PROCESS": True,
-        "REJECTED": True,
-        "ACTIVE": True,
-        "LATE": True,
-        "EXPIRED": True
-    }
 
     if client_id is None or customer_id is None:
         LOGGER.error(f"data to validate access is incorrect client_id: {client_id} customer_id: {customer_id}")
@@ -858,16 +852,8 @@ def validate_access(client_id, customer_id):
                 response['success'] = True
                 response['total_loans'] = len(loans)
 
-                for loan in loans:
-                    loan_status = loan.get("Status")
-                    # ["IN_PROCESS", "ACTIVE", "CLOSED", "LATE", "EXPIRED", "REJECTED"]:
-
-                    if status_primary.get(loan_status) is not None:
-                        response["current_loan"] = loan
-
-                if response["current_loan"] is None:
-                    response["current_loan"] = loans[-1]
-
+                last_loan_result = get_last_loan(loans, all_loans=True)
+                response["current_loan"] = last_loan_result
             else:
                 loan = loans[0]
                 loan_status = loan.get("Status")
