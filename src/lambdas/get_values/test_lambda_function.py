@@ -14,11 +14,9 @@ class TestLambda(TestCase):
             }
         }
 
-
     def test_lambda_handler(self):
         result = lambda_handler(self.event, None)
         self.__generic_test(result, 200)
-
 
     def __generic_test(self, result, expected_code):
         status_code = get_status_code(result)
