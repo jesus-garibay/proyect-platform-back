@@ -4,11 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="adc50cbb-b263-4ee7-a919-a61f23b53dc3" name="Changes" comment="Actualizaciones">
-      <change afterPath="$PROJECT_DIR$/src/api.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
+    <list default="true" id="adc50cbb-b263-4ee7-a919-a61f23b53dc3" name="Changes" comment="Actualizaciones 2">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lambdas/init_load_proyect_lambda/configuration.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/lambdas/init_load_proyect_lambda/configuration.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/api.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lambdas/init_load_proyect_lambda/lambda_function.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/lambdas/init_load_proyect_lambda/lambda_function.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lambdas/init_load_proyect_lambda/test_lambda_function.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/lambdas/init_load_proyect_lambda/test_lambda_function.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -333,7 +333,14 @@
       <option name="project" value="LOCAL" />
       <updated>1670559710847</updated>
     </task>
-    <option name="localTasksCounter" value="18" />
+    <task id="LOCAL-00018" summary="Actualizaciones 2">
+      <created>1670561492871</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1670561492871</updated>
+    </task>
+    <option name="localTasksCounter" value="19" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -364,7 +371,8 @@
     <MESSAGE value="Configure" />
     <MESSAGE value="Revision Lambda" />
     <MESSAGE value="Actualizaciones" />
-    <option name="LAST_COMMIT_MESSAGE" value="Actualizaciones" />
+    <MESSAGE value="Actualizaciones 2" />
+    <option name="LAST_COMMIT_MESSAGE" value="Actualizaciones 2" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -378,6 +386,11 @@
           <url>file://$PROJECT_DIR$/src/lambdas/get_values/test_lambda_function.py</url>
           <line>23</line>
           <option name="timeStamp" value="5" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/lambdas/init_load_proyect_lambda/lambda_function.py</url>
+          <line>20</line>
+          <option name="timeStamp" value="6" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
