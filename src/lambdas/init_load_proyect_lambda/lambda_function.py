@@ -6,14 +6,11 @@ from core_utils.utils import get_logger
 LOGGER = get_logger("init_load_proyect_lambda")
 
 
-def lambda_handler(event, context):
+def lambda_handler(event, _):
     try:
         headers = event.get('headers')
         client = boto3.resource(headers['client'])
         table = client.Table(headers['table'])
-
-        # client = boto3.resource("dynamodb")
-        # table = client.Table("suscribers")
 
         LOGGER.info({'client: ': headers['client']})
         LOGGER.info({'table: ': headers['table']})
