@@ -5,7 +5,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="adc50cbb-b263-4ee7-a919-a61f23b53dc3" name="Changes" comment="Se agrego el swagger y validaciones para la lambda">
+      <change afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_13_10_2022_01_49_p__m___Changes_.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_13_10_2022_01_49_p__m___Changes_.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/pip-20.2.3.dist-info/RECORD" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/pip-20.2.3.dist-info/RECORD" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Lib/site-packages/setuptools-49.2.1.dist-info/RECORD" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Lib/site-packages/setuptools-49.2.1.dist-info/RECORD" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Scripts/easy_install-3.9.exe" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Scripts/easy_install-3.9.exe" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Scripts/easy_install.exe" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Scripts/easy_install.exe" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Scripts/pip.exe" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Scripts/pip.exe" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Scripts/pip3.9.exe" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Scripts/pip3.9.exe" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/venv/Scripts/pip3.exe" beforeDir="false" afterPath="$PROJECT_DIR$/venv/Scripts/pip3.exe" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -38,11 +47,11 @@
                 <list>
                   <RecentBranch>
                     <option name="branchName" value="MVP-001_nueva_lambda" />
-                    <option name="lastUsedInstant" value="1665704995" />
+                    <option name="lastUsedInstant" value="1670618285" />
                   </RecentBranch>
                   <RecentBranch>
                     <option name="branchName" value="main" />
-                    <option name="lastUsedInstant" value="1665704989" />
+                    <option name="lastUsedInstant" value="1670618208" />
                   </RecentBranch>
                   <RecentBranch>
                     <option name="branchName" value="Develop" />
@@ -196,10 +205,10 @@
     <recent_temporary>
       <list>
         <item itemvalue="Python tests.Python tests for init_load_proyect_lambda.test_lambda_function.TestLambda" />
-        <item itemvalue="Python tests.Python tests for get_values.test_lambda_function.TestLambda" />
-        <item itemvalue="AWS Lambda.[Local] src/lambdas/get_values/lambda_function.lambda_handler" />
         <item itemvalue="Python tests.Python tests for init_load_proyect_lambda.test_lambda_function.TestLambda.test_lambda_handler" />
+        <item itemvalue="Python tests.Python tests for get_values.test_lambda_function.TestLambda" />
         <item itemvalue="Python.lambda_function" />
+        <item itemvalue="AWS Lambda.[Local] src/lambdas/get_values/lambda_function.lambda_handler" />
       </list>
     </recent_temporary>
   </component>
