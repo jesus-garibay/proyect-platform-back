@@ -3,30 +3,24 @@ import json
 from core_api.responses import api_response
 from core_utils.utils import get_logger
 
-LOGGER = get_logger("")
+LOGGER = get_logger("init_load_proyect_lambda")
 def lambda_handler(event, context):
-    client = boto3.resource("dynamodb")
-    table = client.Table("suscribers")
+
+    headers = event.get('headers')
+    client = boto3.resource(headers['client'])
+    table = client.Table(headers['table'])
+
+    # client = boto3.resource("dynamodb")
+    # table = client.Table("suscribers")
+
+    LOGGER.info({'client: ': headers['client']})
+    LOGGER.info({'table: ': headers['table']})
 
     suscribers = table.scan()['Items']
     suscribers_list = ""
 
     for suscriber in suscribers:
-        suscribers_list += suscriber["name"] + " "
+        suscribers_list += "{Valor: " + suscriber["name"] + "},"
 
-    # print("""{'statusCode': 200,
-    #     'body': json.dumps(suscribers_list),
-    #     'headers': {
-    #     'Content-Type': 'application/json',
-    #     'Access-Control-Allow-Origin': '*'
-    #     }""")
     return api_response(suscribers_list, 200)
-    # return {
-    #     'statusCode': 200,
-    #     # 'body': json.dumps('Hello from Lambda!')
-    #     'body': json.dumps(suscribers_list),
-    #     'headers': {
-    #         'Content-Type': 'application/json',
-    #         'Access-Control-Allow-Origin': '*'
-    #     },
-    # }
+

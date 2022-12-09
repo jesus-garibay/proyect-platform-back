@@ -4,15 +4,17 @@ from core_utils.decorators import ignore_warnings
 from core_api.utils import get_status_code, get_body
 from core_utils.utils import get_logger
 
-LOGGER = get_logger("")
+LOGGER = get_logger("init_load_proyect_lambda")
 
 
 class TestLambda(TestCase):
     def setUp(self) -> None:
         self.event = {
-            "key1": "value1",
-            "key2": "value2",
-            "key3": "value3"
+            "headers": {
+                "client": "dynamodb",
+                "table": "suscribers"
+            }
+
         }
 
     @ignore_warnings
