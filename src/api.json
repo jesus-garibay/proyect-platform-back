@@ -1,0 +1,98 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Pruebas  API",
+    "description": "API description.",
+    "version": "1.0.0"
+  },
+  "host": "api.example.com.",
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "schema": {
+              "$ref": "#/definitions/Empty"
+            }
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "responses": {
+            "default": {
+              "statusCode": "200",
+              "responseTemplates": {
+                "application/json": "{\"message\":\"Pruebas API\"}"
+              }
+            }
+          },
+          "requestTemplates": {
+            "application/json": "{\"statusCode\": 200}"
+          },
+          "passthroughBehavior": "when_no_match",
+          "type": "mock"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Empty": {
+      "type": "object",
+      "title": "Empty Schema"
+    }
+  },
+  "securityDefinitions": {
+    "api_key": {
+      "type": "apiKey",
+      "name": "x-api-key",
+      "in": "header"
+    },
+    "cognito-auth": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "x-amazon-apigateway-authtype": "cognito_user_pools",
+      "x-amazon-apigateway-authorizer": {
+        "providerARNs": [
+          {
+            "Fn::Sub": [
+              "arn:aws:cognito-idp:${AWS::Region}:${AccountId}:userpool/${PoolId}",
+              {
+                "AccountId": {
+                  "Fn::Sub": "{{resolve:ssm:/${Environment}/${AppName}/connector/account/id}}"
+                },
+                "PoolId": {
+                  "Fn::Sub": "{{resolve:ssm:/${Environment}/${AppName}/connector/pool/id}}"
+                }
+              }
+            ]
+          }
+        ],
+        "type": "cognito_user_pools"
+      }
+    }
+  },
+  "x-amazon-apigateway-request-validators": {
+    "Validate query string parameters and headers": {
+      "validateRequestParameters": true,
+      "validateRequestBody": false
+    },
+    "Validate body, query string parameters, and headers": {
+      "validateRequestParameters": true,
+      "validateRequestBody": true
+    },
+    "Validate body": {
+      "validateRequestParameters": false,
+      "validateRequestBody": true
+    }
+  }
+}
