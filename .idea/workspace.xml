@@ -4,9 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="adc50cbb-b263-4ee7-a919-a61f23b53dc3" name="Changes" comment="Se agrego el swagger y validaciones para la lambda">
-      <change beforePath="$PROJECT_DIR$/src/lambdas/get_values/test_lambda_function.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/lambdas/get_values/test_lambda_function.py" afterDir="false" />
-    </list>
+    <list default="true" id="adc50cbb-b263-4ee7-a919-a61f23b53dc3" name="Changes" comment="Se agrego el swagger y validaciones para la lambda" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -22,7 +20,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="MVP-001_nueva_lambda" />
+        <entry key="$PROJECT_DIR$" value="main" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -38,11 +36,11 @@
                 <list>
                   <RecentBranch>
                     <option name="branchName" value="MVP-001_nueva_lambda" />
-                    <option name="lastUsedInstant" value="1665704995" />
+                    <option name="lastUsedInstant" value="1670618285" />
                   </RecentBranch>
                   <RecentBranch>
                     <option name="branchName" value="main" />
-                    <option name="lastUsedInstant" value="1665704989" />
+                    <option name="lastUsedInstant" value="1670618208" />
                   </RecentBranch>
                   <RecentBranch>
                     <option name="branchName" value="Develop" />
@@ -98,7 +96,7 @@
       <recent name="D:\GitProyects\proyect-platform-back\src\layers\core\python" />
     </key>
   </component>
-  <component name="RunManager" selected="Python tests.Python tests for get_values.test_lambda_function.TestLambda">
+  <component name="RunManager" selected="Python tests.Python tests for init_load_proyect_lambda.test_lambda_function.TestLambda">
     <configuration name="lambda_function" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="proyect-platform-back" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -195,11 +193,11 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python tests.Python tests for get_values.test_lambda_function.TestLambda" />
         <item itemvalue="Python tests.Python tests for init_load_proyect_lambda.test_lambda_function.TestLambda" />
-        <item itemvalue="AWS Lambda.[Local] src/lambdas/get_values/lambda_function.lambda_handler" />
         <item itemvalue="Python tests.Python tests for init_load_proyect_lambda.test_lambda_function.TestLambda.test_lambda_handler" />
+        <item itemvalue="Python tests.Python tests for get_values.test_lambda_function.TestLambda" />
         <item itemvalue="Python.lambda_function" />
+        <item itemvalue="AWS Lambda.[Local] src/lambdas/get_values/lambda_function.lambda_handler" />
       </list>
     </recent_temporary>
   </component>
@@ -359,7 +357,14 @@
       <option name="project" value="LOCAL" />
       <updated>1670562797660</updated>
     </task>
-    <option name="localTasksCounter" value="23" />
+    <task id="LOCAL-00023" summary="Se agrego el swagger y validaciones para la lambda">
+      <created>1670618820136</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1670618820136</updated>
+    </task>
+    <option name="localTasksCounter" value="24" />
     <servers>
       <JIRA url="https://inggary.atlassian.net">
         <option name="apiType" value="REST_2_0" />
@@ -380,7 +385,7 @@
                   <entry key="branch">
                     <value>
                       <list>
-                        <option value="main" />
+                        <option value="MVP-001_nueva_lambda" />
                       </list>
                     </value>
                   </entry>
@@ -400,5 +405,36 @@
     <MESSAGE value="Actualizaciones 2" />
     <MESSAGE value="Se agrego el swagger y validaciones para la lambda" />
     <option name="LAST_COMMIT_MESSAGE" value="Se agrego el swagger y validaciones para la lambda" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/lambdas/get_values/test_lambda_function.py</url>
+          <line>18</line>
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/lambdas/get_values/test_lambda_function.py</url>
+          <line>23</line>
+          <option name="timeStamp" value="5" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/lambdas/init_load_proyect_lambda/lambda_function.py</url>
+          <line>24</line>
+          <option name="timeStamp" value="6" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/lambdas/init_load_proyect_lambda/lambda_function.py</url>
+          <line>12</line>
+          <option name="timeStamp" value="7" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+    <watches-manager>
+      <configuration name="tests">
+        <watch expression="result" />
+      </configuration>
+    </watches-manager>
   </component>
 </project>
