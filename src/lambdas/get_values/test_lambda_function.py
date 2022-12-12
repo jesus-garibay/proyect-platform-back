@@ -10,7 +10,7 @@ class TestLambda(TestCase):
     def setUp(self) -> None:
         self.event = {
             "headers": {
-                "Authorization": ""
+                "valor": "Hello world"
             }
         }
 
