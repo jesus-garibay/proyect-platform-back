@@ -10,7 +10,7 @@ class TestLambda(TestCase):
     def setUp(self) -> None:
         self.event = {
             "headers": {
-                "valor": "Hello Gary1"
+                "valor": "Hello Gary2"
             }
         }
 
